@@ -29,8 +29,9 @@ class ContraWR(EEGModuleMixin, nn.Module):
     res_channels : list[int], optional
         Number of channels for each residual block, by default [32, 64, 128].
     activation: nn.Module, default=nn.ELU
-        Activation function class to apply. Should be a PyTorch activation
-        module class like ``nn.ReLU`` or ``nn.ELU``. Default is ``nn.ELU``.
+        Activation function class applied before the final linear layer. Should be
+        a PyTorch activation module class like ``nn.ReLU`` or ``nn.ELU``. Default is
+        ``nn.ELU``. The residual blocks always use ``nn.ReLU``, as in the original code.
     drop_prob : float, default=0.5
         The dropout rate for regularization. Values should be between 0 and 1.
 
@@ -113,7 +114,6 @@ class ContraWR(EEGModuleMixin, nn.Module):
                     drop_prob=drop_prob,
                     kernel_size=kernel_size_res,
                     padding=padding_res,
-                    activation=activation,
                 )
                 for i in range(len(res_channels) - 1)
             ]

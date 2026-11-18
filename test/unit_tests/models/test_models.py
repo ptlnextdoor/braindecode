@@ -2052,6 +2052,13 @@ def test_contrawr_real_dft_stft_matches_torch_stft(sfreq, n_times):
     )
 
 
+def test_contrawr_resblock_activation_matches_reference():
+    # BIOT's ContraWR uses ReLU inside the residual blocks and ELU only in the head.
+    model = ContraWR(n_chans=16, n_outputs=6, sfreq=200, n_times=2000)
+    assert all(type(block.relu) is nn.ReLU for block in model.convs)
+    assert isinstance(model.activation_layer, nn.ELU)
+
+
 def test_parameters_SPARCNet():
 
     model = SPARCNet(n_outputs=2, n_chans=16, n_times=400)
