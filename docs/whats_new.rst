@@ -244,10 +244,11 @@ Bug fixes
   ``d_model`` instead of ``emb_dim`` inputs per token (the same with the defaults).
   Outputs of existing CSBrain classifiers change (:gh:`1541`, :gh:`1572`).
 - :class:`braindecode.models.ContraWR` residual blocks use ``nn.ReLU``, as in the
-  original BIOT code, instead of the ``activation`` argument (``nn.ELU`` by default),
-  which only sets the activation before the final linear layer. The parameters do
-  not change, so saved weights still load. Outputs of existing ContraWR models
-  change (:gh:`1605`).
+  original BIOT code. Since :gh:`756` they took the ``activation`` argument
+  (``nn.ELU`` by default), which now sets only the activation before the final
+  linear layer. The parameters do not change, so saved weights still load. Outputs
+  of existing ContraWR models change (:gh:`1605` by
+  `@ptlnextdoor <https://github.com/ptlnextdoor>`_).
 - :class:`braindecode.models.MEGGPT` with ``on_non_divisible="pad"`` no longer
   averages kept steps that lie after the end of the input. When the last
   segment held fewer real samples than its first kept step position, those
