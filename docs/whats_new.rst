@@ -43,7 +43,10 @@ Requirements
 Bug fixes
 ==========
 
-- None yet
+- :class:`~braindecode.models.BrainModule` applies ``channel_dropout_prob`` to the
+  sensors before the merger and the STFT, as brainmagick does. It zeroed STFT feature
+  rows before, so training with ``n_fft`` set changes; evaluation is unchanged
+  (:gh:`NNNN` by `Aayushya Patel <https://github.com/ptlnextdoor>`_).
 
 Code health
 ============

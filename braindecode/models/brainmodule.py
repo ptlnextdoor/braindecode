@@ -432,8 +432,8 @@ class BrainModule(EEGModuleMixin, nn.Module, license="cc-by-nc-4.0"):
                     "use_merger=True (the spatial merger remaps channels to "
                     "montage-agnostic virtual channels)."
                 )
-            # When use_merger is on, drop over the merged virtual channels: pass
-            # ch_info=None so dropout operates on the actual (post-merge) axis.
+            # Dropout runs before the merger, on the raw sensors. With use_merger
+            # ch_info=None drops any sensor (type selection is rejected above).
             self.channel_dropout = _ChannelDropout(
                 dropout_prob=channel_dropout_prob,
                 ch_info=None if self.use_merger else chs_info,
@@ -536,6 +536,11 @@ class BrainModule(EEGModuleMixin, nn.Module, license="cc-by-nc-4.0"):
                 f"Expected 3D input (batch, channels, time), got shape {x.shape}"
             )
 
+        # Drop sensors first (as in brainmagick), while the channel axis still
+        # holds sensors: after the merger or the STFT it holds other rows.
+        if self.channel_dropout is not None:
+            x = self.channel_dropout(x)
+
         # Apply the spatial channel merger first (if enabled): remaps the channel
         # axis n_chans -> n_virtual_channels before every other transform.
         if self.merger is not None:
@@ -561,10 +566,6 @@ class BrainModule(EEGModuleMixin, nn.Module, license="cc-by-nc-4.0"):
                 x = spec.reshape(B, C * 2 * Fr, T)
             else:
                 x = spec.reshape(B, C * Fr, T)
-
-        # Apply channel dropout if enabled
-        if self.channel_dropout is not None:
-            x = self.channel_dropout(x)
 
         # Apply subject layers if enabled
         if self.subject_layers_module is not None:

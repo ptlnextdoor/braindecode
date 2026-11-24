@@ -3517,6 +3517,33 @@ def test_brain_module_channel_dropout_with_ch_info():
         assert not torch.isnan(output).any()
 
 
+def test_brain_module_channel_dropout_drops_sensors_before_stft():
+    """Dropout zeroes whole sensors: every STFT row of a dropped sensor, no others."""
+    set_random_seeds(0, False)
+    n_chans, n_fft = 8, 64
+    model = BrainModule(
+        n_chans=n_chans,
+        n_outputs=2,
+        n_times=1000,
+        sfreq=250,
+        hidden_dim=16,
+        depth=1,
+        n_fft=n_fft,
+        channel_dropout_prob=0.5,
+    )
+    model.train()
+
+    seen = []
+    model.input_projection.register_forward_hook(lambda m, i, o: seen.append(i[0]))
+    model(torch.randn(2, n_chans, 1000))
+
+    rows_per_sensor = 2 * (n_fft // 2 + 1)  # real and imaginary parts
+    # (sensors, rows of one sensor): the DC and Nyquist imaginary rows are 0 anyway,
+    # so count the sensors whose rows are all zero.
+    per_sensor = (seen[0][0] == 0).all(dim=-1).reshape(n_chans, rows_per_sensor)
+    assert per_sensor.all(dim=-1).sum().item() == int(n_chans * 0.5)
+
+
 # ============================================================================
 # GLU (Gated Linear Units) Tests
 # ============================================================================
