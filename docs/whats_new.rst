@@ -43,7 +43,9 @@ Requirements
 Bug fixes
 ==========
 
-- None yet
+- :class:`~braindecode.models.EEGITNet` raises a ``ValueError`` at construction when ``tcn_in_channel`` is not
+  ``7 * n_filters_time``; before, any ``n_filters_time`` other than 2 built and then failed in ``forward``
+  (:gh:`0000` by `Aayushya Patel <https://github.com/ptlnextdoor>`_).
 
 Code health
 ============

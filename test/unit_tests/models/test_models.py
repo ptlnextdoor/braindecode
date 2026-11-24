@@ -6214,6 +6214,11 @@ def _cz():
         ),
         ("DGCNN", dict(chs_info=_cz(), n_times=1000), "at least 2 channels"),
         (
+            "EEGITNet",
+            dict(n_chans=3, n_times=500, sfreq=125.0, n_filters_time=4),
+            "tcn_in_channel",
+        ),
+        (
             "REVE",
             dict(chs_info=[{"ch_name": "Cz"}], n_times=100, on_non_divisible="crop"),
             "full patch",

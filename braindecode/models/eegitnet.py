@@ -46,7 +46,8 @@ class EEGITNet(EEGModuleMixin, nn.Sequential):
     pool_kernel : int, optional
         Pooling kernel size for the average pooling layer. Default is 4.
     tcn_in_channel : int, optional
-        Number of input channels for Temporal Convolutional (TC) blocks. Default is 14.
+        Number of input channels for Temporal Convolutional (TC) blocks. Must equal
+        ``7 * n_filters_time``, the width of the inception output. Default is 14.
     tcn_kernel_size : int, optional
         Kernel size for the TC blocks. Determines the temporal receptive field.
         Default is 4.
@@ -150,6 +151,11 @@ class EEGITNet(EEGModuleMixin, nn.Sequential):
             raise ValueError(
                 "The TC blocks keep the time axis only with tcn_padding == "
                 "tcn_dilatation * (tcn_kernel_size - 1)."
+            )
+        if tcn_in_channel != 7 * n_filters_time:
+            raise ValueError(
+                "tcn_in_channel must equal the inception output width, "
+                f"7 * n_filters_time = {7 * n_filters_time}, got {tcn_in_channel}."
             )
         # =========== TC blocks =====================
         self.add_module(
