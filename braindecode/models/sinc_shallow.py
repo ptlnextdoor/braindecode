@@ -73,6 +73,10 @@ class SincShallowNet(EEGModuleMixin, nn.Module):
         Size of the pooling window for the average pooling layer. Default is 55.
     pool_stride : int, optional
         Stride of the pooling operation. Default is 12.
+    batch_norm_momentum : float, optional
+        Momentum of both batch normalization layers, in the torch convention: the
+        weight of the new batch in the running statistics. Default is 0.01, which
+        equals the Keras ``momentum=0.99`` of the reference code [sincshallowcode]_.
 
     Notes
     -----
@@ -104,6 +108,7 @@ class SincShallowNet(EEGModuleMixin, nn.Module):
         bandwidth: float = 4.0,
         pool_size: int = 55,
         pool_stride: int = 12,
+        batch_norm_momentum: float = 0.01,
         # braindecode parameters
         n_chans=None,
         n_outputs=None,
@@ -176,9 +181,7 @@ class SincShallowNet(EEGModuleMixin, nn.Module):
         )
 
         self.depthwiseconv = nn.Sequential(
-            nn.BatchNorm2d(
-                self.n_filters, momentum=0.99
-            ),  # To match keras implementation
+            nn.BatchNorm2d(self.n_filters, momentum=batch_norm_momentum),
             nn.Conv2d(
                 in_channels=self.n_filters,
                 out_channels=depth_multiplier * self.n_filters,
@@ -190,7 +193,9 @@ class SincShallowNet(EEGModuleMixin, nn.Module):
 
         # Block 2: Batch norm, activation, pooling, dropout
         self.temporal_aggregation = nn.Sequential(
-            nn.BatchNorm2d(depth_multiplier * self.n_filters, momentum=0.99),
+            nn.BatchNorm2d(
+                depth_multiplier * self.n_filters, momentum=batch_norm_momentum
+            ),
             activation(),
             nn.AvgPool2d(kernel_size=(1, pool_size), stride=(1, pool_stride)),
             nn.Dropout(p=drop_prob),

@@ -43,7 +43,10 @@ Requirements
 Bug fixes
 ==========
 
-- None yet
+- :class:`braindecode.models.SincShallowNet` used torch ``momentum=0.99`` in its batch normalization layers, which
+  is Keras ``momentum=0.01``, so the running statistics kept only the last batch. The new ``batch_norm_momentum=0.01``
+  matches the Keras reference: models trained with 2.1.0 or earlier get different running statistics when trained
+  again, while saved checkpoints load and give the same eval outputs (:gh:`0000` by `Aayushya Patel <https://github.com/ptlnextdoor>`_).
 
 Code health
 ============

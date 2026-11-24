@@ -31,3 +31,17 @@ def test_sinc_shallow_activation_none_defaults_to_elu():
     assert isinstance(model.temporal_aggregation[1], torch.nn.ELU)
     out = model(torch.randn(2, 4, 200))
     assert out.shape == (2, 2)
+
+
+def test_batch_norm_momentum_is_keras_default():
+    # Keras momentum=0.99 keeps 99% of the old statistics: torch momentum=0.01.
+    model = SincShallowNet(n_chans=4, n_outputs=2, n_times=200, sfreq=100)
+    bns = [m for m in model.modules() if isinstance(m, torch.nn.BatchNorm2d)]
+    assert len(bns) == 2
+    assert {bn.momentum for bn in bns} == {0.01}
+
+    model = SincShallowNet(
+        n_chans=4, n_outputs=2, n_times=200, sfreq=100, batch_norm_momentum=0.1
+    )
+    bns = [m for m in model.modules() if isinstance(m, torch.nn.BatchNorm2d)]
+    assert {bn.momentum for bn in bns} == {0.1}
