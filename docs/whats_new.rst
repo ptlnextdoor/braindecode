@@ -28,7 +28,7 @@ Current 2.2.0 (GitHub)
 Enhancements
 ============
 
-- None yet
+- Add ``depthwise=False`` to :class:`braindecode.models.SleepStagerBlanco2020` to build the full-convolution model of the paper (13,485 parameters for 1 channel). The default stays depthwise, so saved models are unchanged (by `Aayushya Patel <https://github.com/ptlnextdoor>`_).
 
 API and behavior changes
 ========================

@@ -34,10 +34,11 @@ class SleepStagerBlanco2020(EEGModuleMixin, nn.Module):
     max_pool_size : int, default=2
         Kernel and stride of the max pooling layers.
     n_groups : int
-        Number of groups for the convolution. Set to 2 in [Blanco2020]_ for 2 Channel EEG.
+        Number of groups for the convolution. Default 2; the paper does not use grouped convolutions.
         Controls the connections between inputs and outputs. ``n_conv_chans``
         must be divisible by ``n_groups``; if ``n_chans`` is not, the first
-        convolution uses ``gcd(n_chans, n_groups)`` groups.
+        convolution uses ``gcd(n_chans, n_groups)`` groups. Ignored if
+        ``depthwise=False``.
     drop_prob : float
         Dropout rate before the output dense layer.
     apply_batch_norm : bool
@@ -51,6 +52,11 @@ class SleepStagerBlanco2020(EEGModuleMixin, nn.Module):
     activation : nn.Module, default=nn.ReLU
         Activation function class to apply. Should be a PyTorch activation
         module class like ``nn.ReLU`` or ``nn.ELU``. Default is ``nn.ReLU``.
+    depthwise : bool, default=True
+        If True, convolutions 2 to 7 are depthwise and the first one uses
+        ``n_groups`` groups (2,845 parameters for 1 channel). The paper uses full
+        convolutions (13,485 parameters for 1 channel, 13,625 for 2 channels);
+        ``depthwise=False`` builds that model.
 
     References
     ----------
@@ -77,6 +83,8 @@ class SleepStagerBlanco2020(EEGModuleMixin, nn.Module):
         activation: type[nn.Module] = nn.ReLU,
         chs_info=None,
         n_times=None,
+        *,
+        depthwise: bool = True,
     ):
         super().__init__(
             n_outputs=n_outputs,
@@ -94,46 +102,38 @@ class SleepStagerBlanco2020(EEGModuleMixin, nn.Module):
         }
 
         batch_norm = nn.BatchNorm2d if apply_batch_norm else nn.Identity
-        n_groups = math.gcd(self.n_chans, n_groups)
+        # Full convolutions (groups=1) as in [Blanco2020]_ vs. the default depthwise ones.
+        first_groups = math.gcd(self.n_chans, n_groups) if depthwise else 1
+        mid_groups = n_conv_chans if depthwise else 1
 
         self.feature_extractor = nn.Sequential(
-            nn.Conv2d(self.n_chans, n_conv_chans, (1, 7), groups=n_groups, padding=0),
-            batch_norm(n_conv_chans),
-            activation(),
-            nn.MaxPool2d((1, max_pool_size)),
             nn.Conv2d(
-                n_conv_chans, n_conv_chans, (1, 7), groups=n_conv_chans, padding=0
+                self.n_chans, n_conv_chans, (1, 7), groups=first_groups, padding=0
             ),
             batch_norm(n_conv_chans),
             activation(),
             nn.MaxPool2d((1, max_pool_size)),
-            nn.Conv2d(
-                n_conv_chans, n_conv_chans, (1, 5), groups=n_conv_chans, padding=0
-            ),
+            nn.Conv2d(n_conv_chans, n_conv_chans, (1, 7), groups=mid_groups, padding=0),
             batch_norm(n_conv_chans),
             activation(),
             nn.MaxPool2d((1, max_pool_size)),
-            nn.Conv2d(
-                n_conv_chans, n_conv_chans, (1, 5), groups=n_conv_chans, padding=0
-            ),
+            nn.Conv2d(n_conv_chans, n_conv_chans, (1, 5), groups=mid_groups, padding=0),
             batch_norm(n_conv_chans),
             activation(),
             nn.MaxPool2d((1, max_pool_size)),
-            nn.Conv2d(
-                n_conv_chans, n_conv_chans, (1, 5), groups=n_conv_chans, padding=0
-            ),
+            nn.Conv2d(n_conv_chans, n_conv_chans, (1, 5), groups=mid_groups, padding=0),
             batch_norm(n_conv_chans),
             activation(),
             nn.MaxPool2d((1, max_pool_size)),
-            nn.Conv2d(
-                n_conv_chans, n_conv_chans, (1, 3), groups=n_conv_chans, padding=0
-            ),
+            nn.Conv2d(n_conv_chans, n_conv_chans, (1, 5), groups=mid_groups, padding=0),
             batch_norm(n_conv_chans),
             activation(),
             nn.MaxPool2d((1, max_pool_size)),
-            nn.Conv2d(
-                n_conv_chans, n_conv_chans, (1, 3), groups=n_conv_chans, padding=0
-            ),
+            nn.Conv2d(n_conv_chans, n_conv_chans, (1, 3), groups=mid_groups, padding=0),
+            batch_norm(n_conv_chans),
+            activation(),
+            nn.MaxPool2d((1, max_pool_size)),
+            nn.Conv2d(n_conv_chans, n_conv_chans, (1, 3), groups=mid_groups, padding=0),
             batch_norm(n_conv_chans),
             activation(),
             nn.MaxPool2d((1, max_pool_size)),

@@ -1390,6 +1390,14 @@ def test_blanco_2020(n_channels, sfreq, n_groups, n_classes, input_size_s):
     )
 
 
+@pytest.mark.parametrize("n_chans,n_params", [(1, 13485), (2, 13625)])
+def test_blanco_2020_full_convs_match_paper_parameter_count(n_chans, n_params):
+    model = SleepStagerBlanco2020(
+        n_chans=n_chans, sfreq=100.0, n_times=3000, n_outputs=5, depthwise=False
+    )
+    assert sum(p.numel() for p in model.parameters()) == n_params
+
+
 def test_blanco_2020_feats():
     n_channels = 2
     sfreq = 50
