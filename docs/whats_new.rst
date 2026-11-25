@@ -43,7 +43,10 @@ Requirements
 Bug fixes
 ==========
 
-- None yet
+- :class:`braindecode.models.SincShallowNet` with default filter settings and
+  ``sfreq`` up to 74 Hz returned NaN. It now raises a ``ValueError`` at construction when
+  a filter starts at or above ``sfreq / 2`` (:gh:`0000` by
+  `@ptlnextdoor <https://github.com/ptlnextdoor>`_).
 
 Code health
 ============

@@ -141,6 +141,19 @@ class SincShallowNet(EEGModuleMixin, nn.Module):
         )
         self.n_filters = len(low_freqs)
 
+        # A filter whose low cutoff reaches Nyquist has zero bandwidth: 0/0 -> NaN.
+        # (Python floats: this must also run when built on the meta device.)
+        highest_cutoff = min_freq + first_freq + (self.n_filters - 1) * freq_stride
+        if self.sfreq is not None and highest_cutoff >= self.sfreq / 2:
+            raise ValueError(
+                f"The highest initial low cutoff ({highest_cutoff:g} Hz, "
+                f"from first_freq={first_freq}, freq_stride={freq_stride}, "
+                f"num_time_filters={num_time_filters} and min_freq={min_freq}) must "
+                f"stay below the Nyquist frequency sfreq / 2 ({self.sfreq / 2:g} Hz). "
+                "Increase sfreq, or decrease first_freq, freq_stride or "
+                "num_time_filters."
+            )
+
         if padding.lower() == "valid":
             n_times_after_sinc_filter = self.n_times - time_filter_len + 1
         elif padding.lower() == "same":

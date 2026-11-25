@@ -6233,6 +6233,11 @@ def _cz():
             dict(n_chans=2, n_times=20, sfreq=128.0, padding="valid"),
             "fewer than pool_size",
         ),
+        (
+            "SincShallowNet",
+            dict(n_chans=2, n_times=512, sfreq=64.0),
+            "Nyquist",
+        ),
         ("TMSANet", dict(n_chans=2, n_times=20), "at least pool_size"),
     ],
 )
