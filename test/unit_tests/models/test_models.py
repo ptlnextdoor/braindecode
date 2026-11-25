@@ -3465,6 +3465,19 @@ def test_brain_module_channel_dropout(brain_module_params, dropout_prob):
         assert model.channel_dropout is not None
 
 
+def test_brain_module_subject_layers_run_before_stft(brain_module_params):
+    """Subject layers map the n_chans electrodes, not the STFT channels."""
+    params = {**brain_module_params, "subject_layers": True, "subject_dim": 8}
+    params["n_subjects"] = 3
+    params["n_fft"] = 64
+    model = BrainModule(**params)
+    n_chans = params["n_chans"]
+    weights = model.subject_layers_module.weights
+    assert weights.shape == (3, n_chans, n_chans)
+    x = torch.randn(2, n_chans, params["n_times"])
+    assert model(x, torch.tensor([0, 2])).shape == (2, params["n_outputs"])
+
+
 def test_brain_module_channel_dropout_eval_mode(brain_module_params):
     """Test channel dropout is disabled in eval mode (deterministic)."""
     set_random_seeds(0, False)

@@ -33,7 +33,9 @@ Enhancements
 API and behavior changes
 ========================
 
-- None yet
+- :class:`braindecode.models.BrainModule` with ``subject_layers=True`` and ``n_fft`` now applies the subject layers
+  before the STFT, as in brainmagick. Models trained with 2.0 in this configuration no longer load
+  (:gh:`0` by `Aayushya Patel <https://github.com/ptlnextdoor>`_).
 
 Requirements
 ============

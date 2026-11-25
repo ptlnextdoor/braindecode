@@ -441,12 +441,26 @@ class BrainModule(EEGModuleMixin, nn.Module, license="cc-by-nc-4.0"):
             )
 
         # Channel accounting MUST follow the forward() order so every combination
-        # is sized correctly: merger -> STFT -> subject_layers -> subject_embedding
+        # is sized correctly: merger -> subject_layers -> STFT -> subject_embedding
         # -> input_projection. A different order mis-shapes input_projection /
         # SubjectLayers for combined configs (e.g. subject_layers + STFT).
 
+        # Subject-specific modules (optional). subject_layers (a per-subject 1x1
+        # map channels -> dim) runs before the STFT, as in brainmagick, so its
+        # weights are (n_subjects, n_chans, dim). subject_embedding concatenates
+        # ``subject_dim`` channels after the STFT.
+        self.subject_embedding = None
+        self.subject_layers_module = None
+        if subject_layers:
+            meg_dim = channels
+            dim = hidden_dim if subject_layers_dim == "hidden" else meg_dim
+            self.subject_layers_module = SubjectLayers(
+                meg_dim, dim, n_subjects, subject_layers_id
+            )
+            channels = dim
+
         # STFT (optional) expands the channel axis: complex -> 2*freq_bins,
-        # magnitude -> freq_bins. It runs before the subject modules in forward().
+        # magnitude -> freq_bins.
         self.stft = None
         if n_fft is not None:
             self.stft = ta.transforms.Spectrogram(
@@ -459,18 +473,6 @@ class BrainModule(EEGModuleMixin, nn.Module, license="cc-by-nc-4.0"):
             freq_bins = n_fft // 2 + 1
             channels *= 2 * freq_bins if fft_complex else freq_bins
 
-        # Subject-specific modules (optional). In forward(), subject_layers (a
-        # per-subject 1x1 map channels -> dim) runs first, then subject_embedding
-        # concatenates ``subject_dim`` channels.
-        self.subject_embedding = None
-        self.subject_layers_module = None
-        if subject_layers:
-            meg_dim = channels
-            dim = hidden_dim if subject_layers_dim == "hidden" else meg_dim
-            self.subject_layers_module = SubjectLayers(
-                meg_dim, dim, n_subjects, subject_layers_id
-            )
-            channels = dim
         if subject_dim > 0:
             self.subject_embedding = _ScaledEmbedding(
                 n_subjects, subject_dim, embedding_scale
@@ -542,6 +544,14 @@ class BrainModule(EEGModuleMixin, nn.Module, license="cc-by-nc-4.0"):
             pos = self.channel_positions[None].expand(x.shape[0], -1, -1)
             x = self.merger(x, pos)  # (B, n_virtual_channels, T)
 
+        # Apply subject layers if enabled
+        if self.subject_layers_module is not None:
+            if subject_index is None:
+                raise ValueError(
+                    "subject_index is required when subject_layers is enabled"
+                )
+            x = self.subject_layers_module(x, subject_index)
+
         # Apply STFT if enabled
         if self.stft is not None:
             # Pad for STFT window
@@ -565,14 +575,6 @@ class BrainModule(EEGModuleMixin, nn.Module, license="cc-by-nc-4.0"):
         # Apply channel dropout if enabled
         if self.channel_dropout is not None:
             x = self.channel_dropout(x)
-
-        # Apply subject layers if enabled
-        if self.subject_layers_module is not None:
-            if subject_index is None:
-                raise ValueError(
-                    "subject_index is required when subject_layers is enabled"
-                )
-            x = self.subject_layers_module(x, subject_index)
 
         # Apply subject embedding if enabled
         if self.subject_embedding is not None:
