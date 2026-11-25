@@ -182,6 +182,7 @@ class CTNet(EEGModuleMixin, nn.Module, license="mit"):
             activation=self.activation_patch,
         )
         self._min_n_times = max(1, self.pool_size_1 * self.pool_size_2)
+        self._check_declared_n_times()
 
         length = 100
         needed = max(

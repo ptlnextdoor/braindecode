@@ -1267,6 +1267,18 @@ class EEGModuleMixin(_BaseHubMixin, metaclass=_BraindecodeDocstringMeta):
             return x.shape[1], x.shape[2], False
         return x.shape[1], x.shape[-1], True
 
+    def _check_declared_n_times(self) -> None:
+        """Raise at construction if the declared ``n_times`` is below ``_min_n_times``."""
+        if (
+            self._n_times is not None
+            and self._min_n_times is not None
+            and self._n_times < self._min_n_times
+        ):
+            raise ValueError(
+                f"{type(self).__name__} needs at least {self._min_n_times} time "
+                f"samples and got n_times={self._n_times}."
+            )
+
     def _check_input_shape(
         self, x: torch.Tensor, args: tuple, kwargs: dict
     ) -> str | None:

@@ -319,6 +319,7 @@ class _BaseSignalJEPA(EEGModuleMixin, nn.Module):
             for _, k, s in reversed(feature_encoder__conv_layers_spec):
                 min_time = (min_time - 1) * s + k
             self._min_n_times = min_time
+            self._check_declared_n_times()
 
         if _init_transformer:
             assert channel_locations is not None  # narrowing for type checker

@@ -131,6 +131,7 @@ class SleepStagerChambon2018(EEGModuleMixin, nn.Module):
         self._min_n_times = max(
             1, min_after_pool1 * max_pool_size + time_conv_size - 1 - 2 * pad_size
         )
+        self._check_declared_n_times()
 
         self.final_layer = nn.Sequential(
             nn.Dropout(p=drop_prob),

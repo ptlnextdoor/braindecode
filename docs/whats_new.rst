@@ -43,7 +43,10 @@ Requirements
 Bug fixes
 ==========
 
-- None yet
+- :class:`~braindecode.models.SleepStagerChambon2018`, :class:`~braindecode.models.CTNet`,
+  :class:`~braindecode.models.TCFormer`, :class:`~braindecode.models.SignalJEPA` and
+  :class:`~braindecode.models.CodeBrain` now raise ``ValueError`` at construction when ``n_times`` is below
+  their minimum, instead of building and failing in every forward (:gh:`XXXX` by `Aayushya Patel <https://github.com/ptlnextdoor>`_).
 
 Code health
 ============

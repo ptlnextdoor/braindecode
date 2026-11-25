@@ -3659,9 +3659,11 @@ def _run_forward(model, n_chans, n_outputs, n_times=512, batch=2, with_subject=F
             19,
             4,
             False,
-            lambda m: m.merger is not None
-            and m.use_merger
-            and tuple(m.channel_positions.shape) == (19, 2),
+            lambda m: (
+                m.merger is not None
+                and m.use_merger
+                and tuple(m.channel_positions.shape) == (19, 2)
+            ),
             id="merger",
         ),
         pytest.param(
@@ -6212,6 +6214,8 @@ def _cz():
             dict(n_chans=2, n_times=250, on_non_divisible="error"),
             "divisible by patch_size",
         ),
+        ("CodeBrain", dict(n_chans=2, n_times=199, sfreq=200.0), "at least"),
+        ("CTNet", dict(n_chans=2, n_times=63), "at least"),
         ("DGCNN", dict(chs_info=_cz(), n_times=1000), "at least 2 channels"),
         (
             "REVE",
@@ -6233,6 +6237,13 @@ def _cz():
             dict(n_chans=2, n_times=20, sfreq=128.0, padding="valid"),
             "fewer than pool_size",
         ),
+        ("SignalJEPA_PostLocal", dict(n_chans=2, n_times=151, sfreq=128.0), "at least"),
+        (
+            "SleepStagerChambon2018",
+            dict(n_chans=2, n_times=154, sfreq=100.0),
+            "at least",
+        ),
+        ("TCFormer", dict(n_chans=2, n_times=55), "at least"),
         ("TMSANet", dict(n_chans=2, n_times=20), "at least pool_size"),
     ],
 )

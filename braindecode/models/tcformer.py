@@ -280,6 +280,7 @@ class TCFormer(EEGModuleMixin, nn.Module, license="mit"):
             d_fused, n_groups + 1, self.n_outputs, classifier_max_norm
         )
         self._min_n_times = max(1, pool_length_1 * pool_length_2)
+        self._check_declared_n_times()
         self._init_parameters()
 
     def _init_parameters(self) -> None:

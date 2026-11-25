@@ -572,7 +572,7 @@ def test_declared_subclass_checks_min_n_times_and_fixed_n_times():
 def test_window_shorter_than_the_layers_raises_value_error(name):
     from braindecode.models.util import models_dict
 
-    model = models_dict[name](n_chans=2, n_outputs=2, n_times=50, sfreq=100.0)
+    model = models_dict[name](n_chans=2, n_outputs=2, n_times=3000, sfreq=100.0)
     with pytest.raises(
         ValueError, match=r"needs at least \d+ time samples and got 50 \(input shape \(2, 2, 50\)\)"
     ):
