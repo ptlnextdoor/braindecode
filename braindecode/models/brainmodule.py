@@ -12,6 +12,7 @@ import math
 import typing as tp
 import warnings
 
+import mne
 import torch
 import torchaudio as ta
 from torch import nn
@@ -838,7 +839,12 @@ class _ChannelDropout(nn.Module):
                 self.droppable_indices = [
                     i
                     for i, ch in enumerate(ch_info)
-                    if ch.get("ch_type", ch.get("kind")) == channel_type
+                    # MNE ``info["chs"]`` entries have no "ch_type" key
+                    if ch.get("ch_type") == channel_type
+                    or (
+                        "ch_type" not in ch
+                        and mne.channel_type({"chs": [ch]}, 0) == channel_type
+                    )
                 ]
             else:
                 # Drop any channel

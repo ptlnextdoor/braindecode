@@ -43,7 +43,8 @@ Requirements
 Bug fixes
 ==========
 
-- None yet
+- :class:`braindecode.models.BrainModule` with ``channel_dropout_type`` set now selects channels from MNE ``chs_info``;
+  before, it dropped no channel for such input (:gh:`0` by `Aayushya Patel <https://github.com/ptlnextdoor>`_).
 
 Code health
 ============

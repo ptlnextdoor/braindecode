@@ -3517,6 +3517,26 @@ def test_brain_module_channel_dropout_with_ch_info():
         assert not torch.isnan(output).any()
 
 
+def test_brain_module_channel_dropout_type_reads_mne_chs_info():
+    """``channel_dropout_type`` selects channels from real MNE ``chs_info``."""
+    import mne
+
+    info = mne.create_info(
+        ["Fp1", "Fp2", "F3", "EOG"], 100.0, ["eeg", "eeg", "eeg", "eog"]
+    )
+    model = BrainModule(
+        n_chans=4,
+        n_outputs=2,
+        n_times=1000,
+        hidden_dim=32,
+        depth=1,
+        channel_dropout_prob=0.5,
+        channel_dropout_type="eeg",
+        chs_info=info["chs"],
+    )
+    assert model.channel_dropout.droppable_indices == [0, 1, 2]
+
+
 # ============================================================================
 # GLU (Gated Linear Units) Tests
 # ============================================================================
